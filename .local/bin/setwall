@@ -1,7 +1,7 @@
 #!/bin/sh
 
 usage() {
-	echo "Usage: $(basename "$0") [-qh] image"
+	echo "Usage: $(basename "$0") [-qhe] image"
 }
 
 xnotify() {
@@ -9,11 +9,12 @@ xnotify() {
 	exit "$2"
 }
 
-INPUT="$HOME/pictures/wallpapers/landskap-med-vandringsmann.jpg"
+INPUT="$HOME/.local/share/wall"
 
 while [ "$#" -gt 0 ]; do
 	case "$1" in
 	-q|--quiet) QUIET=true ;;
+	-e|--echo) ECHO=true ;;
 	-h|--help)  usage && exit ;;
 	*) INPUT=$1 ;;
 	esac
@@ -35,5 +36,6 @@ done
 	&& xnotify "$error" 3
 
 [ -z "$QUIET" ] && notify-send -u low -i "$wall" "Set wallpaper" "$(basename "$wall")"
+[ -n "$ECHO" ] && printf "%s\n" "$wall"
 
 exit 0
