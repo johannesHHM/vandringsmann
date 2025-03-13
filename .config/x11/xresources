@@ -1,4 +1,4 @@
-*.font:          FiraCode Nerd Font Mono:size=18:antialias=true:autohint=true
+*.font:          Fira Code:size=18:antialias=true:autohint=true
 *.barheight:     7
 
 st.font:         Fira Code:style=Regular:size=18:antialias=true:autohint=true
