@@ -1,0 +1,46 @@
+#!/bin/sh
+
+OS="$(uname -s)"
+if [ "$OS" = "Linux" ]; then
+	alias \
+		ls='ls -hv --color=auto --group-directories-first' \
+		grep='grep --color=auto' \
+		diff='grep --color=auto' \
+		ip='ip -color=auto' \
+		tree='tree -C'
+	export \
+		MANPAGER="less" \
+		MANROFFOPT="-P -c" \
+		LESS_TERMCAP_mb="$(printf '%b' '\e[1;36m')" \
+		LESS_TERMCAP_md="$(printf '%b' '\e[1;36m')" \
+		LESS_TERMCAP_me="$(printf '%b' '\e[0m')" \
+		LESS_TERMCAP_se="$(printf '%b' '\e[0m')" \
+		LESS_TERMCAP_so="$(printf '%b' '\e[01;33m')" \
+		LESS_TERMCAP_ue="$(printf '%b' '\e[0m')" \
+		LESS_TERMCAP_us="$(printf '%b' '\e[3;1;31m')" \
+		LESS_TERMCAP_mr="$(tput rev)" \
+		LESS_TERMCAP_mh="$(tput dim)" \
+		LESS_TERMCAP_ZN="$(tput ssubm)" \
+		LESS_TERMCAP_ZV="$(tput rsubm)" \
+		LESS_TERMCAP_ZO="$(tput ssupm)" \
+		LESS_TERMCAP_ZW="$(tput rsupm)"
+
+elif [ "$OS" = "OpenBSD" ]; then
+	[ -x "$(command -v colorls)" ] && alias ls='colorls -G'
+fi
+
+alias \
+	ddnet='DDNet' \
+	ddnet-server='DDNet-Server' \
+	py='python' \
+	ll='ls -lhA' \
+	la='ls -A' \
+	cp='cp -iv' \
+	rm='rm -v' \
+	mv='mv -iv' \
+	mkd='mkdir -pv' \
+	rmd='rmdir -v'
+
+[ -x "$(command -v bat)" ] && export BAT_THEME="gruvbox-dark"
+[ -x "$(command -v nvim)" ] && [ ! -x "$(command -v vim)" ] && alias vim="nvim" vimdiff="nvim -d"
+

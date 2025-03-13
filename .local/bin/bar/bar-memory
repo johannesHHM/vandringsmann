@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case $BUTTON in
+    1) notify-send "Remember Me?" -u low ;;
+esac
+
+COL=$(xrdb -get bar.highlight)
+[ -z "$COL" ] && COL='#689d6a'
+
+echo "^c$COL^MEM^d^ $(free -h | awk '/^Mem/ { print $3"/"$2 }' | sed s/i//g)"

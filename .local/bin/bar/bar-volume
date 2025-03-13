@@ -1,0 +1,22 @@
+#!/bin/sh
+
+case $BUTTON in
+    1) volume -q +5%    ;;
+    2) volume -q --mute ;;
+    3) volume -q -5%    ;;
+    4) volume -q +5%    ;;
+    5) volume -q -5%    ;;
+esac
+
+COL=$(xrdb -get bar.highlight)
+[ -z "$COL" ] && COL='#689d6a'
+MCOL=$(xrdb -get bar.disabled)
+[ -z "$MCOL" ] && MCOL='#a89984'
+
+VOL="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+
+[ "$VOL" != "${VOL#*MUTED}" ] && echo "^c$MCOL^muted^d^" && exit
+
+VOL=$(echo "$VOL" | awk -F': ' '{print int($2 * 100)}')
+
+echo "^c$COL^VOL^d^ $VOL%"

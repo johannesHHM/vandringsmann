@@ -1,0 +1,20 @@
+#!/bin/bash
+
+declare -A cities
+cities=(
+    ["New York"]="America/New_York"
+    ["London"]="Europe/London"
+    ["Kiev"]="Europe/Kiev"
+    ["Beijing"]="Asia/Shanghai"
+    ["Sydney"]="Australia/Sydney"
+    ["Berlin"]="Europe/Berlin"
+    ["Mumbai"]="Asia/Kolkata"
+    ["Los Angeles"]="America/Los_Angeles"
+    ["São Paulo"]="America/Sao_Paulo"
+)
+
+for city in "${!cities[@]}"; do
+    timezone=${cities[$city]}
+    current_time=$(TZ="$timezone" date +"%H:%M")
+    echo "$city, $current_time"
+done

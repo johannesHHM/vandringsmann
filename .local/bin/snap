@@ -1,0 +1,36 @@
+#!/bin/sh
+# shellcheck disable=SC2016,SC2015
+
+xusage() {
+	echo "Usage: $(basename "$0") [-sdfhq] [-o file] [file]"
+	echo ''
+	echo 'Options:'
+	echo '  -s, --select    manually select screenshot area'
+	echo '  -d, --delete    dont save screenshot, only copy to clipboard'
+	echo '  -f, --freeze    freeze screen before taking screenshot'
+	echo '  -o, --out FILE  save screenshot to FILE'
+	echo '  -q, --quiet     dont send desktop notification'
+	echo '  -h, --help      print this help message'
+	exit "$1"
+}
+
+FILE="$HOME/pictures/screenshots/%b-%d-%Y-%T.png"
+NOTIFY='notify-send "$$(realpath $f)" "format: $F ($wx$h)\n" -i $$(realpath $f)'
+CLIP='xclip -selection clipboard -t image/png $$(realpath $f)'
+ARGS='-z -o'
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+	-s|--select) ARGS="$ARGS -s" ;;
+	-d|--delete) DEL='rm $f' ;;
+	-f|--freeze) ARGS="$ARGS -f" ;;
+	-o|--out) [ "$#" -gt 1 ] && FILE="$2" && shift || xusage 2 ;;
+	-q|--quiet) NOTIFY="true" ;;
+	-h|--help) xusage ;;
+	*) FILE=$1 ;;
+	esac
+	shift
+done
+
+# shellcheck disable=SC2086
+scrot $ARGS "$FILE" -e "$CLIP;$NOTIFY;$DEL"

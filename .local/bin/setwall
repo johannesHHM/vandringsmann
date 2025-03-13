@@ -1,0 +1,39 @@
+#!/bin/sh
+
+usage() {
+	echo "Usage: $(basename "$0") [-qh] image"
+}
+
+xnotify() {
+	[ -z "$QUIET" ] && notify-send -u critical 'Error setting wallpaper' "$1"
+	exit "$2"
+}
+
+INPUT="$HOME/pictures/wallpapers/landskap-med-vandringsmann.jpg"
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+	-q|--quiet) QUIET=true ;;
+	-h|--help)  usage && exit ;;
+	*) INPUT=$1 ;;
+	esac
+	shift
+done
+
+! wall=$(realpath -q "$INPUT") \
+	&& [ -z "$QUIET" ] \
+	&& xnotify "Could not find path '$INPUT'" 1
+
+[ -d "$wall" ] \
+	&& wall=$(find "$wall" -type f -iregex '.*.\(jpg\|jpeg\|png\|gif\)' | shuf -n 1)
+
+[ -z "$wall" ] \
+	&& xnotify "Found no images in directory '$INPUT'" 2
+
+! error=$(xwallpaper --zoom "$wall" 2>&1) \
+	&& [ -z "$QUIET" ] \
+	&& xnotify "$error" 3
+
+[ -z "$QUIET" ] && notify-send -u low -i "$wall" "Set wallpaper" "$(basename "$wall")"
+
+exit 0

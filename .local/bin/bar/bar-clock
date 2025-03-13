@@ -1,0 +1,12 @@
+#!/bin/sh
+
+case $BUTTON in
+    1) notify-send 'Timezones' \
+        "$(tzones | column -t -s ',' | sort -u -k 2)" \
+        -i . -t 10000 ;;
+esac
+
+COL=$(xrdb -get bar.highlight)
+[ -z "$COL" ] && COL='#689d6a'
+
+echo "^c$COL^$(date '+%H:%M:%S')^d^"

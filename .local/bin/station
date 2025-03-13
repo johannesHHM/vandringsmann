@@ -1,0 +1,28 @@
+#!/bin/sh
+
+options="portable\ngjervoldsøy\nøya-duel\nhybel-duel"
+if [ $# -gt 0 ]; then
+	selected="$1"
+else
+	selected=$(printf "$options" | dmenu -p "Where are you?")
+fi
+
+OFFMONITORS="$(xrandr -q | awk '/connected/ {printf "%s ", "--output "$1" --off"} END {print ""}')"
+
+echo $OFFMONITORS
+
+case "$selected" in
+	"portable") xrandr $OFFMONITORS \
+		--output LVDS-1 --primary --mode 1920x1080 --rate 60 ;;
+	"gjervoldsøy") xrandr $OFFMONITORS \
+		--output DP-2 --primary --mode 1920x1080 --rate 144 ;;
+	"øya-duel") xrandr $OFFMONITORS \
+		--output DP-2 --primary --mode 1920x1080 \
+		--output LVDS-1 --mode 1920x1080 --rate 60 --below DP-2 --rate 144 ;;
+	"hybel-duel") xrandr $OFFMONITORS \
+		--output HDMI-1 --primary --mode 1920x1080 --rate 144 \
+		--output LVDS-1 --mode 1920x1080 --rate 60 --below HDMI-1 ;;
+esac
+
+setwall
+notify-send -u low 'Monitor setup' "$selected"

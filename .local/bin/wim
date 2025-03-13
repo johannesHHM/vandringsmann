@@ -1,0 +1,35 @@
+#!/bin/sh
+# shellcheck disable=SC2015
+
+xusage() {
+        echo "Usage: $(basename "$0") COMMAND"
+        echo ''
+        echo 'Commands:'
+        echo '  xrdb        read and refresh xrdb values'
+        echo '  gaps, INT   set gap size, INT can be relative (eg. +5) or absolute'
+        echo '  zoom        switches selected window with master'
+        echo '  help        print this help message'
+        exit "$1"
+}
+
+[ "$#" -eq 0 ] && xusage 1
+
+sockmsg() { echo "$1 $2" | nc -w 10 -U '/tmp/dwm.sock'; }
+
+isint() { [ "$1" -eq "$1" ] 2> /dev/null; }
+
+gaps() {
+        isint "$1" || xusage 1
+        case "$1" in
+                [+-]*) sockmsg 'setgaps' "$1" ;;
+                *) sockmsg 'setgapsabs' "$1" ;;
+        esac
+}
+
+case "$1" in
+        xrdb) sockmsg 'xrdbreload' ;;
+        gaps) [ "$#" -gt 1 ] && gaps "$2" || xusage 1 ;;
+        zoom) sockmsg 'zoom' ;;
+        help) xusage ;;
+        *) xusage 1 ;;
+esac

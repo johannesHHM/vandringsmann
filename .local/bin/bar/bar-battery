@@ -1,0 +1,23 @@
+#!/bin/sh
+
+COL=$(xrdb -get bar.highlight)
+[ -z "$COL" ] && COL='#689d6a'
+DCOL=$(xrdb -get bar.disabled)
+[ -z "$DCOL" ] && DCOL='#a89984'
+WCOL=$(xrdb -get bar.warning)
+[ -z "$WCOL" ] && WCOL='#fb4934'
+
+for battery in /sys/class/power_supply/BAT?*; do
+	[ -n "${capacity+x}" ] && echo ' '
+	case "$(cat "$battery/status" 2>&1)" in
+		'Full')         status='BAT' ;;
+		'Discharging')  status='BAT' ;;
+		'Charging')     status='CHR' ;;
+		'Not charging') status='IDL' ;;
+		'Unknown')      status='UNK' ;;
+		*) echo "^c$DCOL^nobat^d^" && exit ;;
+	esac
+	capacity=$(cat "$battery/capacity" 2>&1)
+	[ "$status" = 'DIS' ] && [ "$capacity" -le 20 ] && COL=$WCOL
+	printf '^c%s^%s^d^ %d%%' "$COL" "$status" "$capacity"
+done && printf '\n'

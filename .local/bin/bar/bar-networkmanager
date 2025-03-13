@@ -1,0 +1,49 @@
+#!/bin/sh
+
+COL=$(xrdb -get bar.highlight); [ -z "$COL" ] && COL='#689d6a'
+COL_DIS=$(xrdb -get bar.disabled); [ -z "$COL_DIS" ] && COL_DIS='#a89984'
+[ -n $BUTTON ]; \
+    COL_ALT=$(xrdb -get bar.althighlight); [ -z "$COL_ALT" ] && COL_ALT='#8ec07c'
+
+case $BUTTON in
+    1) NMCLI="$(nmcli -f state,device,type,name c s)"; \
+        notify-send "$(echo "$NMCLI" | sed 's/^[^ ]* *//;q')" \
+        "$(echo "$NMCLI" | sed " \
+            1d; \
+            /^activated/{/loopback/!s/^[^ ]* */<span color='$COL_ALT'>/}; \
+            /loopback/s/^[^ ]* */<span color='$COL'>/; \
+            /^<span/!s/^[^ ]* */<span color='$COL_DIS'>/; \
+            s/$/<\/span>/")" \
+        -i . -t 10000 ;;
+    2) st -c st-float -e nmtui ;;
+    3) SCTL="$(systemctl status sshd)"; \
+        SSH_STATUS="$(echo "$SCTL" | awk '/Active:/ {print $2}')"; \
+        COL_STATUS="$([ $SSH_STATUS = "inactive" ] && echo $COL_DIS || echo $COL_ALT)"; \
+        notify-send 'nosummary' \
+        "<b><span color='$COL'>SSH Daemon<\/span><\/b>\n$( \
+            echo "$SCTL" | sed 's/^[^-]*- *//;q' \
+        ):  <span color='$COL_STATUS'>$(\
+            echo "$SSH_STATUS"\
+        )<\/span>\n<b><span color='$COL'>LAN Addresses<\/span><\/b>\n$(\
+            ip -o -4 a | tac | awk '/inet / {printf "%s <b><span color='\''%s'\''>%s</span></b>\n", $2, "'$COL_ALT'", $4}' | column -t)" \
+        -i . -t 0 ;;
+esac
+
+status=$(nmcli device status)
+
+if echo "$status" | grep -q "ethernet.*connected"; then
+    ETH="^c$COL^ETHERNET^d^"
+fi
+if echo "$status" | grep -q "wifi.*connected"; then
+    NAME=$(echo "$status" | grep "wifi.*connected" | awk '{print $4}')
+    WIFI="^c$COL^WIFI^d^ $NAME"
+fi
+if [ -z $ETH ] && [ -z $WIFI ]; then
+    echo "^c$COL_DIS^offline^d^"
+    exit
+fi
+if ! [ -z $ETH ] && ! [ -z $WIFI ]; then
+    SEP=' '
+fi
+
+echo "$ETH$SEP$WIFI"

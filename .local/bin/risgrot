@@ -1,0 +1,233 @@
+#!/bin/sh
+# shellcheck disable=SC2015
+
+usage() {
+    echo "Usage: $(basename "$0") [<image>] [-lqh] [-t <theme>] [-w <image>] [-s <image>]"
+    echo ''
+    echo 'Description:'
+    echo '  generate and set color themes for my patched utilities'
+    echo "  the '--wal' tries to replicate pywal's color generation"
+    echo ''
+    echo 'Commands:'
+    echo "  <image>                same as calling '-w' and '-s' with <image>"
+    echo "  -l, --list-themes      lists themes that can be used by the '-t' command"
+    echo '  -t, --theme <theme>    set theme'
+    echo '  -w, --wal <image>      generates a color scheme from given image'
+    echo '  -s, --setwall <image>  set wallpaper to given image'
+    echo "  -q, --quiet            don't send setwall notification"
+    echo '  -h, --help             prints this help message'
+}
+
+die() {
+    printf 'Error: %s\n' "$1"
+    exit 1
+}
+
+hex_to_rgb() {
+    color="${1#"#"}"
+    r=$(printf "%d\n" "0x${color%????}")
+    tmp="${color%??}"
+    g=$(printf "%d\n" "0x${tmp#??}")
+    b=$(printf "%d\n" "0x${color#????}")
+    echo "$r $g $b"
+}
+
+rgb_to_hex() {
+    printf "#%02x%02x%02x\n" "$1" "$2" "$3"
+}
+
+darken_color() {
+    amount="$2"
+    rgb=$(hex_to_rgb "$1")
+
+    r=$(echo "$rgb" | cut -d ' ' -f1)
+    g=$(echo "$rgb" | cut -d ' ' -f2)
+    b=$(echo "$rgb" | cut -d ' ' -f3)
+
+    r=$((r * (100 - amount) / 100))
+    g=$((g * (100 - amount) / 100))
+    b=$((b * (100 - amount) / 100))
+
+    rgb_to_hex "$r" "$g" "$b"
+}
+
+lighten_color() {
+    amount="$2"
+    rgb=$(hex_to_rgb "$1")
+
+    r=$(echo "$rgb" | cut -d ' ' -f1)
+    g=$(echo "$rgb" | cut -d ' ' -f2)
+    b=$(echo "$rgb" | cut -d ' ' -f3)
+
+    r=$((r + (255 - r) * amount / 100))
+    g=$((g + (255 - g) * amount / 100))
+    b=$((b + (255 - b) * amount / 100))
+    rgb_to_hex "$r" "$g" "$b"
+}
+
+blend_color() {
+    rgb1=$(hex_to_rgb "$1")
+    rgb2=$(hex_to_rgb "$2")
+    
+    r1=$(echo "$rgb1" | cut -d ' ' -f1)
+    g1=$(echo "$rgb1" | cut -d ' ' -f2)
+    b1=$(echo "$rgb1" | cut -d ' ' -f3)
+    
+    r2=$(echo "$rgb2" | cut -d ' ' -f1)
+    g2=$(echo "$rgb2" | cut -d ' ' -f2)
+    b2=$(echo "$rgb2" | cut -d ' ' -f3)
+    
+    r3=$(( (r1 + r2) / 2 ))
+    g3=$(( (g1 + g2) / 2 ))
+    b3=$(( (b1 + b2) / 2 ))
+    
+    rgb_to_hex "$r3" "$g3" "$b3"
+}
+
+replace_line() {
+    index=$1
+    new="$2"
+    count=0
+    while IFS= read -r line; do
+        count=$((count + 1))
+        if [ "$count" -eq "$index" ]; then
+            echo "$new"
+        else
+            echo "$line"
+        fi
+    done
+}
+
+echox() {
+    i=$1
+    shift 1
+    # we want to split elements
+    # shellcheck disable=SC2068
+    set -- $@
+    eval "echo \${$i}"
+}
+
+gen_colors() {
+    IMAGE="$1"
+    count="$2"
+
+    while [ "$count" -lt 25 ] ; do
+        colors=$(magick "$IMAGE" -resize '25%' -colors "$count" -unique-colors txt:- 2> /dev/null | awk 'NR>1 && NR<18 { print $3 }')
+        [ -z "$colors" ] && die 'imagemagick failed, is the file correct?'
+        count=$(("$count" + 1))
+        [ "$(echo "$colors" | wc -w)" -gt 15 ] && break
+    done
+
+    [ "$(echo "$colors" | wc -w)" -lt 16 ] && die 'failed to create 16 colors from image'
+
+    COLORS="$(echo "$colors" | awk '
+        {
+            lines[NR] = $0
+        }
+        END {
+            print lines[1]
+            for (i = 9; i <= 16; i++) {
+                print lines[i]
+            }
+            for (i = 9; i <= 15; i++) {
+                print lines[i]
+            }
+        }
+    ')"
+}
+
+NL=$(printf '\nq')
+NL=${NL%q}
+
+adjust_colors() {
+    col1=$(darken_color "$(echox 1 "$COLORS")" 40)
+    col8=$(blend_color "$(echox 8 "$COLORS")" '#EEEEEE')
+    col9=$(darken_color "$col8" 30)
+    col16=$(blend_color "$(echox 16 "$COLORS")" '#EEEEEE')
+
+    COLORS="$(echo "$COLORS" \
+        | replace_line 1 "$col1" \
+        | replace_line 8 "$col8" \
+        | replace_line 9 "$col9" \
+        | replace_line 16 "$col16")"
+}
+
+xrdb_merge() {
+    col_back=$(echox 1 "$COLORS")
+    col_fore=$(echox 16 "$COLORS")
+    col_high=$(echox 7 "$COLORS")
+
+    col_altback=$(lighten_color "$col_back" 20)
+    col_altfore=$col_fore
+    col_althigh=$(lighten_color "$col_high" 15)
+
+    col_disabled=$(darken_color "$(echox 16 "$COLORS")" 50)
+    col_warning=$(blend_color "$(echox 10 "$COLORS")" '#FF4444')
+
+
+    xinput=$(printf '%s' "$COLORS" | awk '{ print "*.color" NR-1 ": " $0 }')$NL
+    xinput=$xinput"*.background: $col_back"$NL
+    xinput=$xinput"*.foreground: $col_fore"$NL
+    xinput=$xinput"*.highlight: $col_high"$NL
+
+    xinput=$xinput"*.altbackground: $col_altback"$NL
+    xinput=$xinput"*.altforeground: $col_altfore"$NL
+    xinput=$xinput"*.althighlight: $col_althigh"$NL
+
+    xinput=$xinput'bar.disabled: '$col_disabled"$NL"
+    xinput=$xinput"bar.warning: $col_warning"$NL
+    
+    printf '%s' "$xinput" | xrdb -merge
+}
+
+reload_progs() {
+    wim xrdb
+    echo 0 | nc -w 10 -U '/tmp/dwm-bar.sock'
+    pgrep -x st | xargs kill -s SIGUSR1
+}
+
+wal() {
+    [ ! -f "$IMAGE" ] && die "can't find file '$IMAGE'"
+    gen_colors "$IMAGE" 16
+    adjust_colors
+    xrdb_merge
+}
+
+set_wall() {
+    [ ! -f "$WALLPAPER" ] && die "can't find file '$WALLPAPER'"
+    setwall "$QUIET" "$WALLPAPER" &
+}
+
+merge_theme() {
+    theme="$X_CONFDIR/themes/$THEME"
+    [ ! -f "$theme" ] && die "can't find theme '$THEME'"
+    xrdb -remove
+    xrdb -merge "$X_CONFDIR/xresources"
+    xrdb -merge "$theme"
+}
+
+X_CONFDIR="${XDG_CONFIG_HOME:-$HOME/.config}/x11"
+
+[ "$#" -eq 0 ] && xrdb -merge "$X_CONFDIR/xresources" && reload_progs && exit
+[ "$#" -eq 1 ] \
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -l|--list-themes) ls "$X_CONFDIR/themes" ;;
+        -t|--theme) [ "$#" -gt 1 ] && THEME="$2" && shift || die "argument '$1' requires parameter" ;;
+        -w|--wal) [ "$#" -gt 1 ] && IMAGE="$2" && shift || die "argument '$1' requires parameter" ;;
+        -s|--setwall) [ "$#" -gt 1 ] && WALLPAPER="$2" && shift || die "argument '$1' requires parameter" ;;
+        -q|--quiet) QUIET='-q' ;;
+        -h|--help) usage && exit ;;
+        *) WALLPAPER="$1" && IMAGE="$1";;
+    esac
+    shift
+done
+
+[ -n "$IMAGE" ] && wal
+[ -n "$THEME" ] && merge_theme
+[ -n "$WALLPAPER" ] && set_wall
+
+if [ -n "$IMAGE" ] || [ -n "$THEME" ]; then 
+    reload_progs
+fi

@@ -1,0 +1,52 @@
+[global]
+    width = (200, 800)
+    origin = top-right
+    offset = (8, 42)
+    
+    padding = 10
+    horizontal_padding = 10
+    text_icon_padding = 16
+    gap_size = 7
+    frame_width = 3
+    corner_radius = 0
+
+    font = FiraCode Nerd Font Mono 18
+    markup = full
+    format = "<b><span color='#689d6a'>%s</span></b>\n%b"
+
+    notification_limit = 20
+    history_length = 20
+    timeout = 6
+    stack_duplicates = false
+
+    enable_recursive_icon_lookup = true
+    icon_theme = "Adwaita"
+    min_icon_size = 48
+    max_icon_size = 128
+
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+    background = "#282828"
+    foreground = "#ebdbb2" 
+
+[urgency_low]
+    # frame_color = "#83a598"
+    frame_color = "#689d6a"
+    timeout = 3
+
+[urgency_normal]
+    frame_color = "#689d6a"
+
+[urgency_critical]
+    frame_color = "#fb4934"
+    timeout = 0
+
+[lolschedule]
+    summary = "*League Schedule*"
+    icon_position = top
+
+[nosummary]
+    summary = "nosummary"
+    format = "%b"
