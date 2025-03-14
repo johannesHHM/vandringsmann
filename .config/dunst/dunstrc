@@ -1,5 +1,5 @@
 [global]
-    width = (0, 800)
+    width = (0, 600)
     origin = top-right
     offset = (8, 34)
     
