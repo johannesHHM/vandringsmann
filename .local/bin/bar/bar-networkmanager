@@ -44,4 +44,4 @@ if [ -n "$ETH" ] && [ -n "$WIFI" ]; then
     SEP=' '
 fi
 
-echo "$ETH$SEP$WIFI"
+echo "$WIFI$SEP$ETH"
