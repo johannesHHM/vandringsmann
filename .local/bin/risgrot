@@ -114,7 +114,7 @@ gen_colors() {
     while [ "$count" -lt 25 ] ; do
         colors=$(magick "$IMAGE" -resize '25%' -colors "$count" -unique-colors txt:- 2> /dev/null | awk 'NR>1 && NR<18 { print $3 }')
         [ -z "$colors" ] && die 'imagemagick failed, is the file correct?'
-        count=$(("$count" + 1))
+        count=$(($count + 1))
         [ "$(echo "$colors" | wc -w)" -gt 15 ] && break
     done
 
@@ -194,8 +194,10 @@ wal() {
 }
 
 set_wall() {
-    [ ! -f "$WALLPAPER" ] && die "can't find file '$WALLPAPER'"
-    setwall "$QUIET" "$WALLPAPER" &
+    [ ! -e "$WALLPAPER" ] && die "can't find file '$WALLPAPER'"
+    if ! IMAGE=$(setwall -e "$QUIET" "$WALLPAPER"); then
+        die "error setting wallpaper"
+    fi
 }
 
 merge_theme() {
@@ -209,7 +211,6 @@ merge_theme() {
 X_CONFDIR="${XDG_CONFIG_HOME:-$HOME/.config}/x11"
 
 [ "$#" -eq 0 ] && xrdb -merge "$X_CONFDIR/xresources" && reload_progs && exit
-[ "$#" -eq 1 ] \
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -224,9 +225,9 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-[ -n "$IMAGE" ] && wal
-[ -n "$THEME" ] && merge_theme
 [ -n "$WALLPAPER" ] && set_wall
+[ -n "$IMAGE" ] && [ -z "$THEME" ] && wal
+[ -n "$THEME" ] && merge_theme
 
 if [ -n "$IMAGE" ] || [ -n "$THEME" ]; then 
     reload_progs
