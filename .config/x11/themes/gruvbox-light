@@ -1,7 +1,7 @@
-*.font:          Fira Code:style=SemiBold:size=18:antialias=true:autohint=true
+*.font:          Fira Code:style=SemiBold:size=12:antialias=true:autohint=true
 dwm.topbar:      0
 
-st.font:         Fira Code:style=SemiBold:size=17:antialias=true:autohint=true
+st.font:         Fira Code:style=SemiBold:size=12:antialias=true:autohint=true
 st.alpha:        0.93
 st.alphanf:      0.90
 

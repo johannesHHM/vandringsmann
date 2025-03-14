@@ -1,12 +1,12 @@
-*.font:          Fira Code:size=18:antialias=true:autohint=true
+*.font:          Fira Code:size=12:antialias=true:autohint=true
 *.barheight:     7
 
-st.font:         Fira Code:style=Regular:size=18:antialias=true:autohint=true
+st.font:         Fira Code:style=Regular:size=12:antialias=true:autohint=true
 st.alpha:        0.98
 st.alphanf:      0.95
 st.borderpx:     0
 
-dwm.font2:       Symbols Nerd Font Mono:size=18:antialias=true:autohint=true
+dwm.font2:       Symbols Nerd Font Mono:size=12:antialias=true:autohint=true
 dwm.borderpx:    3
 dwm.gappx:       0
 dwm.ulinepx:     4
