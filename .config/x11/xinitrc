@@ -10,7 +10,7 @@ fi
 xrandr --dpi 84
 (sleep 1 && xcompmgr) &
 
-autostart="dunst pipewire ipcbar"
+autostart="dunst pipewire sblocks"
 
 for program in $autostart; do
 	pidof -sx "$program" || "$program" &
