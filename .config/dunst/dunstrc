@@ -10,7 +10,7 @@
     frame_width = 3
     corner_radius = 0
 
-    font = FiraCode Nerd Font Mono 18
+    font = Fira Code 18
     markup = full
     format = "<b><span color='#689d6a'>%s</span></b>\n%b"
 
