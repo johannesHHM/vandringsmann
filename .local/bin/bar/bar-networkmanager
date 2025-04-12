@@ -33,7 +33,7 @@ if echo "$status" | grep -q "ethernet.*connected"; then
     ETH="^c$COL^ETHERNET^d^"
 fi
 if echo "$status" | grep -q "wifi.*connected"; then
-    NAME=$(echo "$status" | grep "wifi.*connected" | awk '{print $4}')
+    NAME="$(echo "$status" | grep "wifi.*connected" | sed 's/^\([^ ]*[ ]\+\)\{3\}//')"
     WIFI="^c$COL^WIFI^d^ $NAME"
 fi
 if [ -z "$ETH" ] && [ -z "$WIFI" ]; then
@@ -44,4 +44,4 @@ if [ -n "$ETH" ] && [ -n "$WIFI" ]; then
     SEP=' '
 fi
 
-echo "$WIFI$SEP$ETH"
+echo "$ETH$SEP$WIFI"
