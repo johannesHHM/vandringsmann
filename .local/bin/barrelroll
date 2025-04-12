@@ -1,0 +1,36 @@
+#!/bin/sh
+
+primary="$(xrandr -q | grep ' connected primary')"
+rotation="$(echo "$primary" | \
+	sed -nE "s/.*[0-9]+x[0-9]+\+[0-9]+\+[0-9]+\s+([A-Za-z]+).*/\1/p")"
+
+if [ "$1" = rotate ] ; then
+	case "$rotation" in
+		inverted) wacom=ccw ; randr=left ;;
+		"") wacom=cw ; randr=right ;;
+		right) wacom=half ; randr=inverted ;;
+		left) wacom=none ; randr=normal ;;
+	esac
+elif [ "$1" = flip ] ; then
+	case "$rotation" in
+		right) wacom=ccw ; randr=left ;;
+		left) wacom=cw ; randr=right ;;
+		"") wacom=half ; randr=inverted ;;
+		inverted) wacom=none ; randr=normal ;;
+	esac
+else
+	echo "usage: barrelrole [rotate|flip]"
+	exit 1
+fi
+
+screen="${primary%% *}"
+xrandr --output "$screen" --rotate "$randr"
+
+if command -v xsetwacom > /dev/null ; then
+	ids="$(xsetwacom list devices | sed -n 's/.*id: \([0-9]*\).*/\1/p')"
+	for id in $ids ; do
+		xsetwacom --set "$id" Rotate "$wacom"
+	done
+fi
+
+exit 0
